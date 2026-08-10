@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>القاعدة المعرفية للدعم الفني CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#132621;
+    --ink-soft:#3f554d;
+    --paper:#F7F4EC;
+    --card:#FFFFFF;
+    --line:#DCD5C2;
+    --teal:#0F4C3A;
+    --teal-deep:#0A362A;
+    --gold:#B8912F;
+    --gold-soft:#E9DDB8;
+    --muted:#8A8477;
+    --danger:#9C3B2E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 500px at 85% -10%, rgba(15,76,58,0.07), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Tajawal', 'Segoe UI', sans-serif;
+    min-height:100vh;
+    padding:32px 18px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+  .seal{
+    width:52px;height:52px;flex:none;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 3px var(--gold-soft), 0 6px 16px rgba(15,76,58,0.25);
+  }
+  .seal svg{width:26px;height:26px;}
+  h1{font-family:'Cairo',sans-serif;font-weight:800;font-size:22px;margin:0;color:var(--teal-deep);}
+  .subtitle{margin:4px 0 0;font-size:13.5px;color:var(--ink-soft);}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow:0 1px 2px rgba(19,38,33,0.04), 0 10px 30px -18px rgba(19,38,33,0.25);
+    overflow:hidden;
+  }
+
+  .step{
+    padding:20px 22px;
+    position:relative;
+    transition:opacity .15s;
+  }
+  .step + .step{border-top:1px solid var(--line);}
+  .step.disabled{opacity:.4;pointer-events:none;}
+
+  .step-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:700;color:var(--teal);
+    letter-spacing:.2px;margin-bottom:8px;
+  }
+  .step-num{
+    width:19px;height:19px;border-radius:50%;
+    background:var(--teal);color:#fff;
+    font-size:11px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+
+  .combo{position:relative;}
+  .combo input{
+    width:100%;font-family:inherit;font-size:15.5px;
+    padding:13px 44px 13px 16px;
+    border:1.5px solid var(--line);border-radius:11px;
+    background:var(--paper);color:var(--ink);outline:none;
+    transition:border-color .15s, background .15s;
+  }
+  .combo input:focus{border-color:var(--teal);background:#fff;}
+  .combo input:disabled{cursor:not-allowed;}
+  .combo .chev{
+    position:absolute;left:15px;top:50%;
+    width:11px;height:11px;
+    border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:translateY(-65%) rotate(45deg);
+    pointer-events:none;
+  }
+  .options{
+    position:absolute;z-index:30;top:calc(100% + 6px);right:0;left:0;
+    max-height:260px;overflow-y:auto;
+    background:#fff;border:1px solid var(--line);border-radius:11px;
+    box-shadow:0 14px 34px -12px rgba(19,38,33,0.35);
+    display:none;
+  }
+  .options.open{display:block;}
+  .opt{padding:11px 16px;font-size:14.5px;cursor:pointer;border-bottom:1px solid #F0EDE3;color:var(--ink);}
+  .opt:last-child{border-bottom:none;}
+  .opt:hover, .opt.active{background:#F2EFE4;color:var(--teal-deep);}
+  .opt-empty{padding:14px 16px;font-size:13.5px;color:var(--muted);text-align:center;}
+
+  .tear{position:relative;height:1px;background:var(--line);}
+  .tear::before{
+    content:"";position:absolute;inset:0 auto auto 0;width:100%;height:1px;
+    background-image:radial-gradient(circle, var(--paper) 2.2px, transparent 2.3px);
+    background-size:14px 1px;background-repeat:repeat-x;top:-1px;
+  }
+
+  .results{padding:22px;display:none;}
+  .results.show{display:block;}
+  .status-chip{
+    display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;
+    font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;
+    padding:7px 14px;border-radius:999px;margin:0 0 8px;
+  }
+  .status-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
+  .chips-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field-label{
+    display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    color:var(--gold);letter-spacing:.3px;margin-bottom:7px;
+  }
+  .field-label::before{content:"";width:16px;height:2px;background:var(--gold);display:inline-block;}
+  .field-body{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;font-size:14.5px;line-height:1.9;color:var(--ink);white-space:pre-wrap;
+  }
+  .field-body.empty{color:var(--muted);font-size:13.5px;}
+
+  .copy-btn{
+    margin-top:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+    color:var(--teal);background:none;border:none;cursor:pointer;padding:2px 0;
+  }
+  .copy-btn:hover{text-decoration:underline;}
+
+  .empty-state{padding:34px 22px 40px;text-align:center;color:var(--ink-soft);}
+  .empty-state svg{width:30px;height:30px;color:var(--gold);margin-bottom:10px;}
+  .empty-state p{margin:0;font-size:13.5px;}
+
+  .status-bar{margin-top:14px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .status-bar.err{color:var(--danger);}
+  .retry-btn{
+    display:inline-block;margin-top:10px;font-family:'Cairo',sans-serif;
+    font-size:12.5px;font-weight:700;color:#fff;background:var(--teal);
+    border:none;border-radius:8px;padding:8px 16px;cursor:pointer;
+  }
+  .retry-btn:hover{background:var(--teal-deep);}
+
+  /* icon cards for main category */
+  .cards-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .cat-card{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:16px 8px 13px;border:1.5px solid var(--line);border-radius:13px;
+    background:var(--paper);cursor:pointer;transition:border-color .15s, background .15s, transform .1s;
+    text-align:center;
+  }
+  .cat-card:hover{transform:translateY(-1px);border-color:var(--gold);}
+  .cat-card.active{background:var(--teal);border-color:var(--teal);}
+  .cat-card .cat-icon{
+    width:38px;height:38px;border-radius:50%;
+    background:#fff;display:flex;align-items:center;justify-content:center;
+    flex:none;box-shadow:0 1px 2px rgba(19,38,33,0.08);
+  }
+  .cat-card.active .cat-icon{background:var(--gold-soft);}
+  .cat-card .cat-icon svg{width:19px;height:19px;color:var(--teal);}
+  .cat-card .cat-name{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.35;}
+  .cat-card.active .cat-name{color:#fff;}
+  .cat-card .cat-count{font-size:10.5px;color:var(--muted);}
+  .cat-card.active .cat-count{color:var(--gold-soft);}
+
+  /* loading spinner */
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:3px solid var(--gold-soft);border-top-color:var(--teal);
+    animation:spin .7s linear infinite;margin:0 auto 12px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* global search */
+  .gsearch{position:relative;margin-bottom:16px;}
+  .gsearch input{
+    width:100%;font-family:inherit;font-size:14.5px;
+    padding:12px 42px 12px 16px;
+    border:1.5px solid var(--line);border-radius:12px;
+    background:var(--card);color:var(--ink);outline:none;
+    transition:border-color .15s;
+  }
+  .gsearch input:focus{border-color:var(--teal);}
+  .gsearch .gicon{
+    position:absolute;left:15px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;color:var(--muted);pointer-events:none;
+  }
+  .gsearch .goptions{
+    position:absolute;z-index:40;top:calc(100% + 6px);right:0;left:0;
+    max-height:320px;overflow-y:auto;
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 14px 34px -12px rgba(19,38,33,0.35);
+    display:none;
+  }
+  .gsearch .goptions.open{display:block;}
+  .gopt{padding:11px 16px;cursor:pointer;border-bottom:1px solid #F0EDE3;}
+  .gopt:last-child{border-bottom:none;}
+  .gopt:hover{background:#F2EFE4;}
+  .gopt .gopt-path{font-size:10.5px;color:var(--gold);font-weight:700;margin-bottom:2px;}
+  .gopt .gopt-status{font-size:13.5px;color:var(--ink);}
+
+  /* history */
+  .history{margin-top:16px;}
+  .history-head{font-size:12.5px;font-weight:700;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .history-list{display:flex;flex-direction:column;gap:6px;}
+  .hist-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;cursor:pointer;font-size:12.5px;
+  }
+  .hist-item:hover{border-color:var(--gold);}
+  .hist-text{flex:1;min-width:0;}
+  .hist-path{font-size:10px;color:var(--gold);font-weight:700;}
+  .hist-status{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hist-copied{
+    flex:none;font-size:10px;color:var(--teal);font-weight:700;
+    background:var(--gold-soft);padding:2px 7px;border-radius:999px;
+  }
+  .history-empty{font-size:12px;color:var(--muted);text-align:center;padding:6px;}
+
+  footer{text-align:center;margin-top:22px;}
+  .signature{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:50%;
+    background:var(--teal-deep);color:#fff;
+    font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;
+    letter-spacing:.3px;
+  }
+
+  /* password gate */
+  #gate{
+    position:fixed;inset:0;z-index:100;
+    background:
+      radial-gradient(1200px 500px at 85% -10%, rgba(15,76,58,0.07), transparent 60%),
+      var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  #gate.hidden{display:none;}
+  .gate-card{
+    width:100%;max-width:340px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 1px 2px rgba(19,38,33,0.04), 0 10px 30px -18px rgba(19,38,33,0.25);
+    padding:28px 24px;text-align:center;
+  }
+  .gate-seal{
+    width:52px;height:52px;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+    box-shadow:0 0 0 3px var(--gold-soft), 0 6px 16px rgba(15,76,58,0.25);
+  }
+  .gate-seal svg{width:24px;height:24px;}
+  .gate-title{font-family:'Cairo',sans-serif;font-weight:800;font-size:17px;color:var(--teal-deep);margin:0 0 6px;}
+  .gate-sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;}
+  #gateInput{
+    width:100%;font-family:inherit;font-size:15.5px;text-align:center;letter-spacing:2px;
+    padding:12px 14px;border:1.5px solid var(--line);border-radius:11px;
+    background:var(--paper);color:var(--ink);outline:none;margin-bottom:12px;
+  }
+  #gateInput:focus{border-color:var(--teal);background:#fff;}
+  #gateBtn{
+    width:100%;font-family:'Cairo',sans-serif;font-weight:700;font-size:14.5px;
+    background:var(--teal);color:#fff;border:none;border-radius:11px;
+    padding:12px;cursor:pointer;
+  }
+  #gateBtn:hover{background:var(--teal-deep);}
+  #gateErr{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px;}
+
+  /* floating feedback button */
+  #fabBtn{
+    position:fixed;bottom:22px;left:22px;z-index:60;
+    width:54px;height:54px;border-radius:50%;
+    background:var(--teal);color:#fff;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 24px -6px rgba(15,76,58,0.5), 0 0 0 3px var(--gold-soft);
+    transition:transform .15s;
+  }
+  #fabBtn:hover{transform:scale(1.06);background:var(--teal-deep);}
+  #fabBtn svg{width:24px;height:24px;}
+
+  #fbOverlay{
+    position:fixed;inset:0;z-index:70;
+    background:rgba(19,38,33,0.45);
+    display:none;align-items:flex-end;justify-content:flex-start;
+    padding:22px;
+  }
+  #fbOverlay.open{display:flex;}
+  .fb-card{
+    width:100%;max-width:320px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 20px 50px -14px rgba(19,38,33,0.5);
+    padding:20px;
+  }
+  .fb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .fb-title{font-family:'Cairo',sans-serif;font-weight:800;font-size:15.5px;color:var(--teal-deep);margin:0;}
+  .fb-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px;}
+  .fb-field{margin-bottom:10px;}
+  .fb-label{display:block;font-size:12px;font-weight:700;color:var(--gold);margin-bottom:5px;}
+  .fb-field input, .fb-field textarea{
+    width:100%;font-family:inherit;font-size:14px;
+    padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;
+    background:var(--paper);color:var(--ink);outline:none;resize:none;
+  }
+  .fb-field input:focus, .fb-field textarea:focus{border-color:var(--teal);background:#fff;}
+  .fb-field textarea{min-height:80px;}
+  #fbSubmit{
+    width:100%;font-family:'Cairo',sans-serif;font-weight:700;font-size:14px;
+    background:var(--teal);color:#fff;border:none;border-radius:10px;
+    padding:11px;cursor:pointer;margin-top:4px;
+  }
+  #fbSubmit:hover{background:var(--teal-deep);}
+  #fbMsg{font-size:12.5px;color:var(--teal);text-align:center;margin-top:10px;min-height:16px;}
+</style>
+</head>
+<body>
+
+<button id="fabBtn" title="اقتراح أو ملاحظة">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+  </svg>
+</button>
+
+<div id="fbOverlay">
+  <div class="fb-card">
+    <div class="fb-head">
+      <p class="fb-title">اقتراح أو ملاحظة</p>
+      <button class="fb-close" id="fbCloseBtn">✕</button>
+    </div>
+    <div class="fb-field">
+      <label class="fb-label">الاسم (اختياري)</label>
+      <input id="fbName" type="text" placeholder="اسمك">
+    </div>
+    <div class="fb-field">
+      <label class="fb-label">وسيلة التواصل (اختياري)</label>
+      <input id="fbContact" type="text" placeholder="بريد إلكتروني أو رقم جوال">
+    </div>
+    <div class="fb-field">
+      <label class="fb-label">الملاحظة / الاقتراح</label>
+      <textarea id="fbNote" placeholder="اكتبي ملاحظتك هنا..."></textarea>
+    </div>
+    <button id="fbSubmit">إرسال</button>
+    <p id="fbMsg"></p>
+  </div>
+</div>
+<iframe name="fbHiddenFrame" id="fbHiddenFrame" style="display:none;"></iframe>
+
+
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-seal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+      </svg>
+    </div>
+    <p class="gate-title">دخول محمي</p>
+    <p class="gate-sub">أدخلي كلمة المرور للمتابعة</p>
+    <input id="gateInput" type="password" placeholder="••••••••" autocomplete="off">
+    <button id="gateBtn">دخول</button>
+    <p id="gateErr"></p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="seal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>القاعدة المعرفية للدعم الفني CRM</h1>
+      <p class="subtitle">اختر التصنيف ثم الحالة لعرض التفاصيل المعتمدة</p>
+    </div>
+  </header>
+
+  <div class="gsearch">
+    <input id="gsearchInput" type="text" placeholder="بحث شامل في كل الحالات..." autocomplete="off">
+    <svg class="gicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+    </svg>
+    <div id="gsearchOptions" class="goptions"></div>
+  </div>
+
+  <div class="panel">
+
+    <div class="step" id="stepSheet">
+      <label class="step-label"><span class="step-num">1</span> التصنيف الرئيسي</label>
+      <div id="sheetCards" class="cards-row"></div>
+    </div>
+
+    <div class="step disabled" id="stepStatus">
+      <label class="step-label"><span class="step-num">2</span> الحالة</label>
+      <div class="combo">
+        <input id="statusInput" type="text" placeholder="ابحث أو اختر الحالة..." autocomplete="off" disabled>
+        <span class="chev"></span>
+        <div id="statusOptions" class="options"></div>
+      </div>
+    </div>
+
+    <div class="step disabled" id="stepNote">
+      <label class="step-label"><span class="step-num">3</span> ملاحظة اضافية</label>
+      <div class="combo">
+        <input id="noteInput" type="text" placeholder="ابحث أو اختر..." autocomplete="off" disabled>
+        <span class="chev"></span>
+        <div id="noteOptions" class="options"></div>
+      </div>
+    </div>
+
+    <div class="tear"></div>
+
+    <div id="results" class="results">
+      <div class="chips-row">
+        <span class="status-chip"><span class="dot"></span><span id="chipSheet"></span></span>
+        <span class="status-chip"><span class="dot"></span><span id="chipStatus"></span></span>
+        <span class="status-chip"><span class="dot"></span><span id="chipNote"></span></span>
+      </div>
+
+      <div class="field">
+        <span class="field-label">الإجراء المتخذ</span>
+        <div id="actionBody" class="field-body"></div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">صياغة الرد</span>
+        <div id="replyBody" class="field-body"></div>
+        <button class="copy-btn" id="copyBtn">نسخ صياغة الرد</button>
+      </div>
+
+      <div class="field" id="notesField" style="display:none;">
+        <span class="field-label">ملاحظات</span>
+        <div id="notesBody" class="field-body"></div>
+      </div>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <div id="emptySpinner" class="spinner" style="display:none;"></div>
+      <svg id="emptyIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+      </svg>
+      <p id="emptyText">اختر التصنيف الرئيسي أولاً</p>
+      <button id="retryBtn" class="retry-btn" style="display:none;">إعادة المحاولة</button>
+    </div>
+  </div>
+
+  <div class="history" id="historyBlock">
+    <div class="history-head">🕘 آخر الحالات المستخدمة</div>
+    <div id="historyList" class="history-list"></div>
+  </div>
+
+  <div id="statusBar" class="status-bar"></div>
+  <footer><span class="signature">th</span></footer>
+</div>
+
+<script>
+const SITE_PASSWORD = "As@2030";
+const gate = document.getElementById('gate');
+const gateInput = document.getElementById('gateInput');
+const gateBtn = document.getElementById('gateBtn');
+const gateErr = document.getElementById('gateErr');
+
+function tryUnlock(){
+  if(gateInput.value === SITE_PASSWORD){
+    sessionStorage.setItem('site_unlocked', '1');
+    gate.classList.add('hidden');
+  }else{
+    gateErr.textContent = 'كلمة المرور غير صحيحة';
+    gateInput.value = '';
+    gateInput.focus();
+  }
+}
+gateBtn.addEventListener('click', tryUnlock);
+gateInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
+
+if(sessionStorage.getItem('site_unlocked') === '1'){
+  gate.classList.add('hidden');
+}else{
+  gateInput.focus();
+}
+
+const SHEET_ID = "1mL8YhMXFc9oWHoQf_b7wJKxy8udy9qKAJxqKH-PMr-M";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnXz95D_jy0syp7nqZeOiF05mO55ZCiB4TPhnXMO1k2jeV2U4nkPH4U8ivlbnD_44W/exec";
+const SHEETS = [
+  {name:"صحائف الدعوى", gid:"1463354886"},
+  {name:"الطلبات على القضية", gid:"1855258354"},
+  {name:"القضية", gid:"1333415031"}
+];
+
+const norm = s => (s||"").toString().replace(/[\u064B-\u0652]/g,"").replace(/[إأآا]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/\s+/g," ").trim();
+
+function findCol(headerRow, candidates){
+  const normalized = headerRow.map(norm);
+  for(const cand of candidates){
+    const c = norm(cand);
+    if(!c) continue;
+    let idx = normalized.findIndex(h => h && h === c);
+    if(idx !== -1) return idx;
+    idx = normalized.findIndex(h => h && h.length >= 2 && (h.includes(c) || c.includes(h)));
+    if(idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function setStatusBar(msg, isErr){
+  const bar = document.getElementById('statusBar');
+  bar.textContent = msg || "";
+  bar.classList.toggle('err', !!isErr);
+}
+
+async function fetchSheetData(gid){
+  const url = APPS_SCRIPT_URL + "?gid=" + gid + "&t=" + Date.now();
+  const resp = await fetch(url, {cache:"no-store"});
+  if(!resp.ok) throw new Error("HTTP " + resp.status);
+  const data = await resp.json();
+  if(data && data.error) throw new Error(data.error);
+  return data; // 2D array: [ [headerRow...], [row1...], ... ]
+}
+
+// rows: [{status, note, action, reply, notes}]
+const sheetCache = {};
+const sheetLoading = {};
+
+async function loadSheet(sheetIdx){
+  if(sheetCache[sheetIdx]) return sheetCache[sheetIdx];
+  if(sheetLoading[sheetIdx]) return sheetLoading[sheetIdx];
+
+  sheetLoading[sheetIdx] = (async ()=>{
+    const gid = SHEETS[sheetIdx].gid;
+    const data = await fetchSheetData(gid);
+    if(!data || data.length < 2) throw new Error("لا توجد بيانات كافية في هذا التصنيف");
+
+    const header = data[0];
+    const colStatus = findCol(header, ["الحالة"]);
+    const colNote   = findCol(header, ["ملاحظة اضافية","ملاحظة إضافية"]);
+    const colAction = findCol(header, ["الاجراء المتخذ","الإجراء المتخذ"]);
+    const colReply  = findCol(header, ["صياغة الرد","صياغه الرد"]);
+    const colNotes  = findCol(header, ["ملاحظات"]);
+
+    if(colStatus === -1 || colAction === -1 || colReply === -1){
+      throw new Error("تعذر التعرف على أعمدة (الحالة / الاجراء المتخذ / صياغة الرد)");
+    }
+
+    const cell = v => (v===undefined || v===null) ? "" : String(v).trim();
+
+    let lastStatus = "", lastNote = "";
+    const rows = [];
+    for(let i=1;i<data.length;i++){
+      const r = data[i];
+      if(!r || r.every(c => cell(c)==="")) continue;
+
+      let status = cell(r[colStatus]);
+      if(status){ lastStatus = status; lastNote = ""; }
+      else status = lastStatus;
+      if(!status) continue;
+
+      let note = colNote!==-1 ? cell(r[colNote]) : "";
+      if(note) lastNote = note; else note = lastNote;
+
+      const action = cell(r[colAction]);
+      const reply  = cell(r[colReply]);
+      const notes  = colNotes!==-1 ? cell(r[colNotes]) : "";
+      if(!action && !reply && !notes) continue;
+
+      rows.push({status, note, action, reply, notes});
+    }
+    sheetCache[sheetIdx] = rows;
+    return rows;
+  })();
+
+  try{
+    return await sheetLoading[sheetIdx];
+  }finally{
+    delete sheetLoading[sheetIdx];
+  }
+}
+
+// ---------- generic searchable combo ----------
+function makeCombo(inputId, optionsId){
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(optionsId);
+  let items = [];
+  let filtered = [];
+  let activeIndex = -1;
+  let onSelect = ()=>{};
+
+  function render(arr){
+    list.innerHTML = "";
+    if(arr.length === 0){
+      const d = document.createElement('div');
+      d.className = 'opt-empty';
+      d.textContent = 'لا توجد نتائج مطابقة';
+      list.appendChild(d);
+      return;
+    }
+    arr.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'opt' + (i===activeIndex ? ' active' : '');
+      d.textContent = s;
+      d.addEventListener('mousedown', (e)=>{ e.preventDefault(); pick(s); });
+      list.appendChild(d);
+    });
+  }
+  function open(){ if(!input.disabled) list.classList.add('open'); }
+  function close(){ list.classList.remove('open'); activeIndex = -1; }
+  function pick(val){
+    input.value = val;
+    close();
+    onSelect(val);
+  }
+  input.addEventListener('focus', ()=>{ filtered = items; render(filtered); open(); });
+  input.addEventListener('click', ()=>{ filtered = items; render(filtered); open(); });
+  input.addEventListener('input', ()=>{
+    const q = norm(input.value);
+    filtered = items.filter(s => norm(s).includes(q));
+    activeIndex = -1;
+    render(filtered);
+    open();
+  });
+  input.addEventListener('keydown', (e)=>{
+    if(!list.classList.contains('open')) return;
+    if(e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex+1, filtered.length-1); render(filtered); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); render(filtered); }
+    else if(e.key === 'Enter'){ e.preventDefault(); if(activeIndex>=0 && filtered[activeIndex]) pick(filtered[activeIndex]); }
+    else if(e.key === 'Escape'){ close(); }
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('#'+inputId) && !e.target.closest('#'+optionsId)) close();
+  });
+
+  return {
+    setItems(arr){ items = arr; filtered = arr; },
+    setOnSelect(fn){ onSelect = fn; },
+    clear(){ input.value = ""; },
+    enable(){ input.disabled = false; document.getElementById(inputId).closest('.step').classList.remove('disabled'); },
+    disable(){ input.disabled = true; document.getElementById(inputId).closest('.step').classList.add('disabled'); this.clear(); },
+  };
+}
+
+const statusCombo = makeCombo('statusInput','statusOptions');
+const noteCombo = makeCombo('noteInput','noteOptions');
+
+const emptyState = document.getElementById('emptyState');
+const emptyText = document.getElementById('emptyText');
+const resultsEl = document.getElementById('results');
+const sheetCardsEl = document.getElementById('sheetCards');
+
+let currentSheetIdx = null;
+let currentRows = [];
+let currentStatus = null;
+let currentNote = null;
+
+const CAT_ICONS = [
+  '<path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M9 13h6M9 17h6"/>',
+  '<path d="M9 5h11M9 12h11M9 19h11"/><circle cx="4" cy="5" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="19" r="1.4"/>',
+  '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>'
+];
+
+function showEmpty(msg, loading, showRetry){
+  resultsEl.classList.remove('show');
+  emptyState.style.display = 'block';
+  document.getElementById('emptySpinner').style.display = loading ? 'block' : 'none';
+  document.getElementById('emptyIcon').style.display = loading ? 'none' : 'block';
+  emptyText.textContent = msg;
+  document.getElementById('retryBtn').style.display = showRetry ? 'inline-block' : 'none';
+}
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  if(currentSheetIdx !== null) selectSheet(currentSheetIdx);
+});
+
+function resetToStatusStep(){
+  noteCombo.disable();
+  showEmpty('اختر الحالة لعرض الملاحظات الإضافية المرتبطة');
+}
+
+function resetToSheetStep(){
+  statusCombo.disable();
+  noteCombo.disable();
+  showEmpty('اختر التصنيف الرئيسي أولاً');
+}
+
+function renderSheetCards(){
+  sheetCardsEl.innerHTML = "";
+  SHEETS.forEach((s, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'cat-card' + (idx===currentSheetIdx ? ' active' : '');
+    card.innerHTML =
+      '<span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+CAT_ICONS[idx % CAT_ICONS.length]+'</svg></span>'+
+      '<span class="cat-name">'+s.name+'</span>'+
+      '<span class="cat-count">'+(sheetCache[idx] ? sheetCache[idx].length + ' عنصر' : '')+'</span>';
+    card.addEventListener('click', ()=>selectSheet(idx));
+    sheetCardsEl.appendChild(card);
+  });
+}
+
+async function selectSheet(idx){
+  currentSheetIdx = idx;
+  renderSheetCards();
+  statusCombo.disable();
+  noteCombo.disable();
+  showEmpty('جاري تحميل بيانات "' + SHEETS[idx].name + '"...', true);
+  setStatusBar("");
+  try{
+    currentRows = await loadSheet(idx);
+    const statuses = [...new Set(currentRows.map(r=>r.status))];
+    statusCombo.setItems(statuses);
+    statusCombo.enable();
+    showEmpty('اختر الحالة لعرض الملاحظات الإضافية المرتبطة');
+    setStatusBar('تم تحميل ' + statuses.length + ' حالة من "' + SHEETS[idx].name + '"');
+    renderSheetCards();
+  }catch(err){
+    showEmpty('تعذر تحميل بيانات هذا التصنيف', false, true);
+    setStatusBar('خطأ: ' + err.message, true);
+  }
+}
+renderSheetCards();
+
+statusCombo.setOnSelect((status)=>{
+  currentStatus = status;
+  currentNote = null;
+  const notes = [...new Set(currentRows.filter(r=>r.status===status).map(r=>r.note).filter(n=>n))];
+  if(notes.length === 0){
+    // No sub-notes: show the single matching row directly.
+    const row = currentRows.find(r=>r.status===status);
+    noteCombo.disable();
+    if(row) renderResult(row);
+    else showEmpty('لا توجد تفاصيل مرتبطة بهذه الحالة');
+    return;
+  }
+  noteCombo.setItems(notes);
+  noteCombo.enable();
+  showEmpty('اختر الملاحظة الإضافية لعرض التفاصيل');
+});
+
+noteCombo.setOnSelect((note)=>{
+  currentNote = note;
+  const row = currentRows.find(r=>r.status===currentStatus && r.note===note);
+  if(row) renderResult(row);
+  else showEmpty('لا توجد تفاصيل مطابقة');
+});
+
+function renderResult(row, fromHistoryOrSearch){
+  emptyState.style.display = 'none';
+  resultsEl.classList.add('show');
+
+  document.getElementById('chipSheet').textContent = SHEETS[currentSheetIdx].name;
+  document.getElementById('chipStatus').textContent = row.status;
+  const chipNote = document.getElementById('chipNote');
+  if(row.note){ chipNote.textContent = row.note; chipNote.parentElement.style.display = 'inline-flex'; }
+  else { chipNote.parentElement.style.display = 'none'; }
+
+  const actionBody = document.getElementById('actionBody');
+  actionBody.textContent = row.action || '—';
+  actionBody.classList.toggle('empty', !row.action);
+
+  const replyBody = document.getElementById('replyBody');
+  replyBody.textContent = row.reply || '—';
+  replyBody.classList.toggle('empty', !row.reply);
+
+  const notesField = document.getElementById('notesField');
+  if(row.notes){
+    notesField.style.display = 'block';
+    document.getElementById('notesBody').textContent = row.notes;
+  }else{
+    notesField.style.display = 'none';
+  }
+
+  addHistoryEntry(SHEETS[currentSheetIdx].name, row.status, row.note, false);
+}
+
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('replyBody').textContent;
+  if(!text || text === '—') return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('copyBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'تم النسخ ✓';
+    setTimeout(()=>{ btn.textContent = orig; }, 1500);
+    if(currentSheetIdx !== null && currentStatus){
+      addHistoryEntry(SHEETS[currentSheetIdx].name, currentStatus, currentNote, true);
+    }
+  });
+});
+
+resetToSheetStep();
+
+// ---------- history (last 10 viewed / copied) ----------
+const HISTORY_KEY = 'th_crm_history_v1';
+
+function getHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveHistory(list){
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0,10)));
+}
+function addHistoryEntry(sheetName, status, note, copied){
+  let list = getHistory();
+  const idx = list.findIndex(h => h.sheetName===sheetName && h.status===status && h.note===(note||""));
+  if(idx !== -1){
+    if(copied) list[idx].copied = true;
+    const [item] = list.splice(idx,1);
+    item.ts = Date.now();
+    list.unshift(item);
+  }else{
+    list.unshift({sheetName, status, note: note||"", copied: !!copied, ts: Date.now()});
+  }
+  saveHistory(list);
+  renderHistory();
+}
+function renderHistory(){
+  const list = getHistory();
+  const el = document.getElementById('historyList');
+  if(list.length === 0){
+    el.innerHTML = '<div class="history-empty">لا يوجد استخدام سابق بعد</div>';
+    return;
+  }
+  el.innerHTML = "";
+  list.forEach(item=>{
+    const d = document.createElement('div');
+    d.className = 'hist-item';
+    d.innerHTML =
+      '<div class="hist-text">'+
+        '<div class="hist-path">'+item.sheetName+(item.note ? ' › '+item.note : '')+'</div>'+
+        '<div class="hist-status">'+item.status+'</div>'+
+      '</div>' +
+      (item.copied ? '<span class="hist-copied">تم النسخ</span>' : '');
+    d.addEventListener('click', ()=> jumpTo(item.sheetName, item.status, item.note));
+    el.appendChild(d);
+  });
+}
+async function jumpTo(sheetName, status, note){
+  const idx = SHEETS.findIndex(s=>s.name===sheetName);
+  if(idx === -1) return;
+  await selectSheet(idx);
+  currentStatus = status;
+  const rows = currentRows.filter(r=>r.status===status);
+  const notes = [...new Set(rows.map(r=>r.note).filter(n=>n))];
+  document.getElementById('statusInput').value = status;
+  if(notes.length){
+    noteCombo.setItems(notes);
+    noteCombo.enable();
+    if(note){
+      document.getElementById('noteInput').value = note;
+      currentNote = note;
+    }
+  }
+  const row = rows.find(r => r.note === (note||"")) || rows[0];
+  if(row) renderResult(row);
+}
+renderHistory();
+
+// ---------- global search across all sheets ----------
+const gsearchInput = document.getElementById('gsearchInput');
+const gsearchOptions = document.getElementById('gsearchOptions');
+let globalIndex = null;
+let globalIndexLoading = false;
+
+async function ensureGlobalIndex(){
+  if(globalIndex || globalIndexLoading) return;
+  globalIndexLoading = true;
+  gsearchOptions.innerHTML = '<div class="gopt"><div class="spinner" style="margin:6px auto;"></div></div>';
+  gsearchOptions.classList.add('open');
+  try{
+    const all = await Promise.all(SHEETS.map((s,i)=>loadSheet(i).catch(()=>[])));
+    globalIndex = [];
+    all.forEach((rows, sIdx)=>{
+      rows.forEach(r=>{
+        globalIndex.push({sheetIdx:sIdx, sheetName:SHEETS[sIdx].name, status:r.status, note:r.note, row:r});
+      });
+    });
+    renderSheetCards();
+  }finally{
+    globalIndexLoading = false;
+    gsearchOptions.classList.remove('open');
+  }
+}
+
+function renderGlobalResults(q){
+  const nq = norm(q);
+  if(!globalIndex || nq.length < 2){
+    gsearchOptions.classList.remove('open');
+    return;
+  }
+  const seen = new Set();
+  const matches = globalIndex.filter(item=>{
+    const key = item.sheetName+'|'+item.status+'|'+item.note;
+    if(seen.has(key)) return false;
+    const hit = norm(item.status).includes(nq) || norm(item.note).includes(nq) || norm(item.sheetName).includes(nq);
+    if(hit) seen.add(key);
+    return hit;
+  }).slice(0,25);
+
+  gsearchOptions.innerHTML = "";
+  if(matches.length === 0){
+    gsearchOptions.innerHTML = '<div class="gopt"><div class="gopt-status" style="color:var(--muted);">لا توجد نتائج مطابقة</div></div>';
+  }else{
+    matches.forEach(item=>{
+      const d = document.createElement('div');
+      d.className = 'gopt';
+      d.innerHTML = '<div class="gopt-path">'+item.sheetName+(item.note ? ' › '+item.note : '')+'</div><div class="gopt-status">'+item.status+'</div>';
+      d.addEventListener('mousedown', (e)=>{
+        e.preventDefault();
+        gsearchInput.value = "";
+        gsearchOptions.classList.remove('open');
+        jumpTo(item.sheetName, item.status, item.note);
+      });
+      gsearchOptions.appendChild(d);
+    });
+  }
+  gsearchOptions.classList.add('open');
+}
+
+gsearchInput.addEventListener('focus', ()=> ensureGlobalIndex());
+gsearchInput.addEventListener('input', async ()=>{
+  await ensureGlobalIndex();
+  renderGlobalResults(gsearchInput.value);
+});
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.gsearch')) gsearchOptions.classList.remove('open');
+});
+
+// The global index now loads lazily (on search focus/typing), not automatically
+// on page load, to avoid overloading the proxy service with parallel requests.
+
+// ---------- feedback floating button ----------
+const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSeuvMJlNRl2xwkCvrLnjxpTbPHYuGDeH-cEwZCE_xddfZzceQ/formResponse";
+const FORM_ENTRIES = {
+  name: "entry.1718622721",
+  contact: "entry.1462166872",
+  note: "entry.208908850"
+};
+
+const fabBtn = document.getElementById('fabBtn');
+const fbOverlay = document.getElementById('fbOverlay');
+const fbCloseBtn = document.getElementById('fbCloseBtn');
+const fbSubmit = document.getElementById('fbSubmit');
+const fbMsg = document.getElementById('fbMsg');
+const fbName = document.getElementById('fbName');
+const fbContact = document.getElementById('fbContact');
+const fbNote = document.getElementById('fbNote');
+
+function openFb(){ fbOverlay.classList.add('open'); fbMsg.textContent = ''; fbNote.focus(); }
+function closeFb(){ fbOverlay.classList.remove('open'); }
+
+fabBtn.addEventListener('click', openFb);
+fbCloseBtn.addEventListener('click', closeFb);
+fbOverlay.addEventListener('click', (e)=>{ if(e.target === fbOverlay) closeFb(); });
+
+fbSubmit.addEventListener('click', ()=>{
+  const note = fbNote.value.trim();
+  if(!note){
+    fbMsg.textContent = 'الرجاء كتابة الملاحظة أولاً';
+    fbMsg.style.color = 'var(--danger)';
+    return;
+  }
+  const params = new URLSearchParams();
+  params.append(FORM_ENTRIES.name, fbName.value.trim());
+  params.append(FORM_ENTRIES.contact, fbContact.value.trim());
+  params.append(FORM_ENTRIES.note, note);
+
+  const iframe = document.getElementById('fbHiddenFrame');
+  const tempForm = document.createElement('form');
+  tempForm.method = 'POST';
+  tempForm.action = FORM_ACTION;
+  tempForm.target = 'fbHiddenFrame';
+  for(const [key, val] of params.entries()){
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = key; inp.value = val;
+    tempForm.appendChild(inp);
+  }
+  document.body.appendChild(tempForm);
+  tempForm.submit();
+  document.body.removeChild(tempForm);
+
+  fbMsg.style.color = 'var(--teal)';
+  fbMsg.textContent = 'تم إرسال ملاحظتك، شكراً لك';
+  fbName.value = ''; fbContact.value = ''; fbNote.value = '';
+  setTimeout(closeFb, 1600);
+});
+</script>
+</body>
+</html>
